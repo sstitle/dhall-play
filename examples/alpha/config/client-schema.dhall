@@ -4,10 +4,12 @@
     , serverPort : Natural
     , clientLabel : Text
     , connectTimeoutSec : Natural
+    , message : Text
     }
 , default =
     { serverHost = "127.0.0.1"
     , serverPort = 8080
     , connectTimeoutSec = 5
+    , message = ""
     }
 }

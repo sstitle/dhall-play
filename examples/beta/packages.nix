@@ -2,16 +2,21 @@
 let
   inherit (ca) mkConfigurableShellApp;
   configDir = ./config;
+  tcpServer = ./../lib/tcp_server.py;
+  tcpClient = ./../lib/tcp_client.py;
 in
 {
   beta-server = mkConfigurableShellApp {
     inherit pkgs configDir;
     name = "beta-server";
     entry = "./server.dhall";
+    runtimeInputs = [ pkgs.python3 ];
     text = config: ''
       set -euo pipefail
-      echo "beta-server (${config.serviceName})"
-      echo "  listen: ${config.listenHost}:${toString config.listenPort}"
+      export TCP_LISTEN_HOST=${pkgs.lib.escapeShellArg config.listenHost}
+      export TCP_LISTEN_PORT=${toString config.listenPort}
+      export TCP_SERVICE_NAME=${pkgs.lib.escapeShellArg config.serviceName}
+      exec ${pkgs.python3}/bin/python3 ${tcpServer}
     '';
   };
 
@@ -19,10 +24,15 @@ in
     inherit pkgs configDir;
     name = "beta-client";
     entry = "./client.dhall";
+    runtimeInputs = [ pkgs.python3 ];
     text = config: ''
       set -euo pipefail
-      echo "beta-client (${config.clientLabel})"
-      echo "  connect: ${config.serverHost}:${toString config.serverPort} (timeout ${toString config.connectTimeoutSec}s)"
+      export TCP_REMOTE_HOST=${pkgs.lib.escapeShellArg config.serverHost}
+      export TCP_REMOTE_PORT=${toString config.serverPort}
+      export TCP_MESSAGE=${pkgs.lib.escapeShellArg config.message}
+      export TCP_TIMEOUT_SEC=${toString config.connectTimeoutSec}
+      export TCP_CLIENT_LABEL=${pkgs.lib.escapeShellArg config.clientLabel}
+      exec ${pkgs.python3}/bin/python3 ${tcpClient}
     '';
   };
 }

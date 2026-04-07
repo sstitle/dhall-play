@@ -36,3 +36,33 @@ nix build .#beta-client && ./result/bin/beta-client
 ```bash
 nix-unit ./test.nix
 ```
+
+## alpha-tcp-demo
+
+> Build alpha server and client, run server in the background, send one TCP message from the client (localhost:4100)
+
+```bash
+set -euo pipefail
+server_bin="$(nix build .#alpha-server --no-link --print-out-paths)/bin/alpha-server"
+client_bin="$(nix build .#alpha-client --no-link --print-out-paths)/bin/alpha-client"
+"$server_bin" &
+pid=$!
+trap 'kill "$pid" 2>/dev/null || true' EXIT
+sleep 0.5
+"$client_bin"
+```
+
+## beta-tcp-demo
+
+> Same for the beta pair (localhost:4200, different Dhall-injected message)
+
+```bash
+set -euo pipefail
+server_bin="$(nix build .#beta-server --no-link --print-out-paths)/bin/beta-server"
+client_bin="$(nix build .#beta-client --no-link --print-out-paths)/bin/beta-client"
+"$server_bin" &
+pid=$!
+trap 'kill "$pid" 2>/dev/null || true' EXIT
+sleep 0.5
+"$client_bin"
+```

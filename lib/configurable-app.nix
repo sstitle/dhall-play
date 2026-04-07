@@ -24,12 +24,13 @@ let
       configDir,
       entry,
       text,
+      runtimeInputs ? [ ],
     }:
     let
       config = dhallConfig { inherit pkgs configDir entry; };
     in
     pkgs.writeShellApplication {
-      inherit name;
+      inherit name runtimeInputs;
       text = text config;
     };
 in

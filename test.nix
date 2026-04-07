@@ -27,6 +27,7 @@ in
       serverPort = 4100;
       clientLabel = "alpha-user";
       connectTimeoutSec = 3;
+      message = "hello from alpha client";
     };
   };
 
@@ -50,10 +51,11 @@ in
       entry = "./client.dhall";
     };
     expected = {
-      serverHost = "10.0.0.50";
+      serverHost = "127.0.0.1";
       serverPort = 4200;
       clientLabel = "beta-user";
       connectTimeoutSec = 12;
+      message = "hello from beta client (different port + payload)";
     };
   };
 }
