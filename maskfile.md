@@ -12,10 +12,18 @@ echo "Hello World!"
 
 ## run
 
-> Evaluate the Dhall hello world expression
+> Show the resolved production config as a Nix expression
 
 ```bash
-dhall <<< './hello.dhall'
+cd config && dhall-to-nix <<< "./production.dhall"
+```
+
+## build
+
+> Build and run the app with config baked in from Dhall
+
+```bash
+nix build && ./result/bin/my-app
 ```
 
 ## test

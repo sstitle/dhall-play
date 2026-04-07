@@ -32,6 +32,8 @@
           treefmtEval = inputs.treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
         in
         {
+          packages.default = import ./app.nix { inherit pkgs; };
+
           devShells.default = import ./shell.nix { inherit pkgs; };
 
           # for `nix fmt`

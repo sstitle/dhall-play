@@ -6,6 +6,8 @@ pkgs.mkShell {
     mask
     nix-unit
     dhall
+    dhall-json
+    dhall-nix
     # keep-sorted end
   ];
 
