@@ -15,7 +15,7 @@ echo "Hello World!"
 > Show the resolved production config as a Nix expression
 
 ```bash
-cd config && dhall-to-nix <<< "./production.dhall"
+cd examples/alpha/config && dhall-to-nix <<< "./server.dhall"
 ```
 
 ## build
@@ -23,7 +23,10 @@ cd config && dhall-to-nix <<< "./production.dhall"
 > Build and run the app with config baked in from Dhall
 
 ```bash
-nix build && ./result/bin/my-app
+nix build .#alpha-server && ./result/bin/alpha-server
+nix build .#alpha-client && ./result/bin/alpha-client
+nix build .#beta-server && ./result/bin/beta-server
+nix build .#beta-client && ./result/bin/beta-client
 ```
 
 ## test

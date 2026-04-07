@@ -30,9 +30,22 @@
         }:
         let
           treefmtEval = inputs.treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
+          configurableApp = import ./lib/configurable-app.nix;
+          alpha = import ./examples/alpha/packages.nix {
+            inherit pkgs;
+            ca = configurableApp;
+          };
+          beta = import ./examples/beta/packages.nix {
+            inherit pkgs;
+            ca = configurableApp;
+          };
         in
         {
-          packages.default = import ./app.nix { inherit pkgs; };
+          packages = {
+            default = alpha.alpha-server;
+            inherit (alpha) alpha-server alpha-client;
+            inherit (beta) beta-server beta-client;
+          };
 
           devShells.default = import ./shell.nix { inherit pkgs; };
 

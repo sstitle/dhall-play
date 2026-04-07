@@ -2,12 +2,12 @@
 pkgs.mkShell {
   buildInputs = with pkgs; [
     # keep-sorted start
-    git
-    mask
-    nix-unit
     dhall
     dhall-json
     dhall-nix
+    git
+    mask
+    nix-unit
     # keep-sorted end
   ];
 
