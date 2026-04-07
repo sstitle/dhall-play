@@ -74,6 +74,19 @@ in
     };
   };
 
+  testDhallConfigGoDemo = {
+    expr = ca.dhallConfig {
+      inherit pkgs;
+      configDir = ./examples/go-demo/config;
+      entry = "./app.dhall";
+    };
+    expected = {
+      greeting = "Configured in Dhall";
+      name = "Go";
+      style = "embedded-json";
+    };
+  };
+
   testDhallConfigNushellDemo = {
     expr = ca.dhallConfig {
       inherit pkgs;

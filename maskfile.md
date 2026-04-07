@@ -28,6 +28,7 @@ nix build .#alpha-client && ./result/bin/alpha-client
 nix build .#beta-server && ./result/bin/beta-server
 nix build .#beta-client && ./result/bin/beta-client
 nix build .#nu-configured-demo && ./result/bin/nu-configured-demo
+nix build .#go-greet && ./result/bin/go-greet
 ```
 
 ## test

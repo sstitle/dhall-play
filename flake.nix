@@ -51,6 +51,10 @@
             inherit pkgs;
             ca = configurableApp;
           };
+          goDemo = import ./examples/go-demo/packages.nix {
+            inherit pkgs;
+            ca = configurableApp;
+          };
         in
         {
           packages = {
@@ -58,6 +62,7 @@
             inherit (alpha) alpha-server alpha-client;
             inherit (beta) beta-server beta-client;
             inherit (nushellDemo) nu-configured-demo;
+            inherit (goDemo) go-greet;
           };
 
           devShells.default = import ./shell.nix { inherit pkgs; };
