@@ -19,6 +19,14 @@
         # keep-sorted end
       ];
 
+      flake = {
+        lib = {
+          # For other flakes: `inputs.dhall-play.lib.configurableApp` (follow `nixpkgs` via `inputs.*.follows`).
+          configurableApp = import ./lib/configurable-app.nix;
+        };
+        tests = import ./test.nix;
+      };
+
       perSystem =
         {
           config,
@@ -30,12 +38,16 @@
         }:
         let
           treefmtEval = inputs.treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
-          configurableApp = import ./lib/configurable-app.nix;
+          configurableApp = self.lib.configurableApp;
           alpha = import ./examples/alpha/packages.nix {
             inherit pkgs;
             ca = configurableApp;
           };
           beta = import ./examples/beta/packages.nix {
+            inherit pkgs;
+            ca = configurableApp;
+          };
+          nushellDemo = import ./examples/nushell-demo/packages.nix {
             inherit pkgs;
             ca = configurableApp;
           };
@@ -45,6 +57,7 @@
             default = alpha.alpha-server;
             inherit (alpha) alpha-server alpha-client;
             inherit (beta) beta-server beta-client;
+            inherit (nushellDemo) nu-configured-demo;
           };
 
           devShells.default = import ./shell.nix { inherit pkgs; };
@@ -57,7 +70,5 @@
             formatting = treefmtEval.config.build.check self;
           };
         };
-
-      flake.tests = import ./test.nix;
     };
 }

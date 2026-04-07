@@ -58,4 +58,51 @@ in
       message = "hello from beta client (different port + payload)";
     };
   };
+
+  testMergeNixConfigs = {
+    expr = ca.mergeNixConfigs {
+      lib = pkgs.lib;
+      configs = [
+        { a = 1; }
+        { b = 2; }
+        { a = 3; }
+      ];
+    };
+    expected = {
+      a = 3;
+      b = 2;
+    };
+  };
+
+  testDhallConfigNushellDemo = {
+    expr = ca.dhallConfig {
+      inherit pkgs;
+      configDir = ./examples/nushell-demo/config;
+      entry = "./app.dhall";
+    };
+    expected = {
+      greeting = "Configured in Dhall";
+      name = "NuShell";
+      style = "friendly";
+    };
+  };
+
+  testDhallConfigJsonDistinctEntries = {
+    expr = (
+      toString (
+        ca.dhallConfigJson {
+          inherit pkgs;
+          configDir = ./examples/alpha/config;
+          entry = "./server.dhall";
+        }
+      ) != toString (
+        ca.dhallConfigJson {
+          inherit pkgs;
+          configDir = ./examples/alpha/config;
+          entry = "./client.dhall";
+        }
+      )
+    );
+    expected = true;
+  };
 }
