@@ -1,0 +1,3 @@
+let greeting = "Hello, World!"
+
+in  greeting

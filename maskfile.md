@@ -10,6 +10,14 @@ This is a [mask](https://github.com/jacobdeichert/mask) task runner file.
 echo "Hello World!"
 ```
 
+## run
+
+> Evaluate the Dhall hello world expression
+
+```bash
+dhall <<< './hello.dhall'
+```
+
 ## test
 
 > Run nix-unit tests
