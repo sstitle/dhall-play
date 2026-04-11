@@ -10,5 +10,19 @@ in
   "./server.dhall"
   "./client.dhall"
 ])
-++ (mk ../examples/go-demo/config [ "./app.dhall" ])
-++ (mk ../examples/nushell-demo/config [ "./app.dhall" ])
+++ (mk ../examples/go-demo/config [
+  "./schema.dhall"
+  "./presets.dhall"
+  "./app.dhall"
+  "./variants/minimal.dhall"
+  "./variants/merged.dhall"
+  "./variants/from-preset.dhall"
+])
+++ (mk ../examples/nushell-demo/config [
+  "./schema.dhall"
+  "./presets.dhall"
+  "./app.dhall"
+  "./variants/minimal.dhall"
+  "./variants/merged.dhall"
+  "./variants/from-preset.dhall"
+])

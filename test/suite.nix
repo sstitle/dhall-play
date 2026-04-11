@@ -1,5 +1,5 @@
 # nix-unit suite: inject `pkgs` and `configurableApp` (as `ca`) for dependency injection.
-# Callers: `test.nix` (CLI via getFlake), `flake.nix` `flake.tests` (via `inputs.nixpkgs`).
+# Callers: `test.nix` (CLI via getFlake); `flake.nix` `perSystem.nix-unit.tests` (and thus `flake.tests.systems.<system>`).
 { pkgs, ca }:
 {
   testInjectablePkgsProvidesLib = {
@@ -25,7 +25,7 @@
   };
 
   testDhallCiEntriesCount = {
-    expr = builtins.length (import ../lib/dhall-ci-entries.nix) == 6;
+    expr = builtins.length (import ../lib/dhall-ci-entries.nix) == 16;
     expected = true;
   };
 
@@ -127,6 +127,29 @@
       greeting = "Configured in Dhall";
       name = "Go";
       style = "embedded-json";
+      tags = [
+        "default"
+        "entry"
+      ];
+      note = "main app.dhall";
+    };
+  };
+
+  testDhallConfigGoDemoMergedVariant = {
+    expr = ca.dhallConfig {
+      inherit pkgs;
+      configDir = ../examples/go-demo/config;
+      entry = "./variants/merged.dhall";
+    };
+    expected = {
+      greeting = "Merged via //";
+      name = "merge-base";
+      style = "plain";
+      tags = [
+        "dhall"
+        "merge"
+      ];
+      note = "Schema::{…} then record merge";
     };
   };
 
@@ -140,6 +163,29 @@
       greeting = "Configured in Dhall";
       name = "NuShell";
       style = "friendly";
+      tags = [
+        "default"
+        "entry"
+      ];
+      note = "main app.dhall";
+    };
+  };
+
+  testDhallConfigNushellDemoPresetVariant = {
+    expr = ca.dhallConfig {
+      inherit pkgs;
+      configDir = ../examples/nushell-demo/config;
+      entry = "./variants/from-preset.dhall";
+    };
+    expected = {
+      greeting = "Heyo";
+      name = "from-preset";
+      style = "bold";
+      tags = [
+        "import"
+        "preset"
+      ];
+      note = "layer from presets.dhall";
     };
   };
 
@@ -189,6 +235,11 @@
       greeting = "Configured in Dhall";
       name = "Patched";
       style = "embedded-json";
+      tags = [
+        "default"
+        "entry"
+      ];
+      note = "main app.dhall";
     };
   };
 

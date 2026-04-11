@@ -17,6 +17,7 @@
           ''
             work=$(mktemp -d)
             cp -r ${configDir}/. "$work"
+            chmod -R u+w "$work"
             (cd "$work" && dhall type <<< ${lib.escapeShellArg entry})
             rm -rf "$work"
           ''
@@ -36,6 +37,7 @@
           ''
             work=$(mktemp -d)
             cp -r ${configDir}/. "$work"
+            chmod -R u+w "$work"
             (cd "$work" && dhall freeze --check <<< ${lib.escapeShellArg entry})
             rm -rf "$work"
           ''

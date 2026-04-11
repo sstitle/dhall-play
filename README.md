@@ -38,8 +38,8 @@ Import this flake and use **`inputs.<name>.lib.configurableApp`** (or follow `ni
 ### Flake outputs
 
 - **`lib.configurableApp`** — the library above (for `import` or `follows`).
-- **`packages`** — example apps (`alpha-server`, `alpha-client`, `beta-*`, `nu-configured-demo`, `go-greet`, …) built with that library.
-- **`checks`** — treefmt formatting check; Dhall type inference (`dhall type`), `dhall freeze --check`, and a negative test on invalid Dhall (see `lib/dhall-ci.nix`, `lib/dhall-ci-entries.nix`).
+- **`packages`** — example apps (TCP `alpha-*` / `beta-*`, Nushell `nu-configured-demo` + `nu-demo-*` variants, Go `go-greet` + `go-greet-*` variants, …) built with that library.
+- **`checks`** — treefmt formatting check; **nix-unit** on **`test.nix`** (same entrypoint as `mask test`; `checks.nix-unit` in `flake.nix` uses [nix-community/nix-unit](https://github.com/nix-community/nix-unit)’s flake module for input overrides, adds `pkgs.nix`, and avoids nested `--flake` evaluation); Dhall type inference (`dhall type`), `dhall freeze --check`, and a negative test on invalid Dhall (see `lib/dhall-ci.nix`, `lib/dhall-ci-entries.nix`).
 - **`formatter`** — used by `nix fmt` / `mask format`.
 
 Unit tests: Nix code in **`test/suite.nix`** (via **`test.nix`** for `nix-unit`), Python helpers for the TCP demos in **`examples/lib/test_tcp_support.py`** (pytest). Run **`mask test`** for both.
@@ -49,7 +49,7 @@ Unit tests: Nix code in **`test/suite.nix`** (via **`test.nix`** for `nix-unit`)
 | Area | Role |
 | --- | --- |
 | `examples/alpha`, `examples/beta` | TCP server/client pairs; Python scripts under `examples/lib/`; Dhall under each `config/`. |
-| `examples/nushell-demo`, `examples/go-demo` | Same pattern with Nushell and Go entrypoints. |
+| `examples/nushell-demo`, `examples/go-demo` | Shared `schema.dhall` + `presets.dhall`; `variants/*.dhall` show defaults, `//` merge, and preset imports. |
 | `examples/fixtures-invalid` | Used by flake checks to ensure bad Dhall fails the pipeline. |
 
 To build a package without running the full demo: `nix build .#<name>` (see `flake.nix` `packages`).
@@ -58,7 +58,7 @@ To build a package without running the full demo: `nix build .#<name>` (see `fla
 
 | Command | Purpose |
 | --- | --- |
-| `mask run` | Run the alpha TCP demo (build server + client, one client message). |
+| `mask run` | Build all demo packages and run alpha TCP, beta TCP, Nushell, and Go examples. |
 | `mask format` | Apply treefmt (`nix fmt`). |
 | `mask lint` | `nix flake check` (formatting gate + Dhall CI checks). |
 | `mask test` | `nix-unit` on `test.nix` (suite in `test/suite.nix`) and pytest on `examples/lib/test_tcp_support.py`. |

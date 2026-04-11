@@ -1,4 +1,16 @@
--- Minimal demo: values flow Dhall → Nix → env → Nushell.
-{ Type = { greeting : Text, name : Text, style : Text }
-, default = { greeting = "Hello", name = "Nix", style = "plain" }
+-- Flexible record: tags + note show composition; defaults keep entries small.
+{ Type =
+    { greeting : Text
+    , name : Text
+    , style : Text
+    , tags : List Text
+    , note : Text
+    }
+, default =
+    { greeting = "Hello"
+    , name = "Nix"
+    , style = "plain"
+    , tags = [] : List Text
+    , note = ""
+    }
 }
