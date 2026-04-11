@@ -1,4 +1,7 @@
 { pkgs, ... }:
+let
+  pythonWithPytest = pkgs.python3.withPackages (ps: [ ps.pytest ]);
+in
 pkgs.mkShell {
   buildInputs = with pkgs; [
     # keep-sorted start
@@ -8,6 +11,7 @@ pkgs.mkShell {
     git
     mask
     nix-unit
+    pythonWithPytest
     # keep-sorted end
   ];
 

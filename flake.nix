@@ -1,5 +1,5 @@
 {
-  description = "Development environment with 'mask' task runner and 'treefmt' code formatter";
+  description = "Dhall + Nix configurable apps (flake lib), examples, treefmt, and mask tasks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -24,7 +24,10 @@
           # For other flakes: `inputs.dhall-play.lib.configurableApp` (follow `nixpkgs` via `inputs.*.follows`).
           configurableApp = import ./lib/configurable-app.nix;
         };
-        tests = import ./test.nix;
+        tests = import ./test/suite.nix {
+          pkgs = import inputs.nixpkgs { };
+          ca = import ./lib/configurable-app.nix;
+        };
       };
 
       perSystem =

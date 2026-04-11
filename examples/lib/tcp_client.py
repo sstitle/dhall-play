@@ -6,13 +6,11 @@ import os
 import socket
 import sys
 
+from tcp_support import parse_client_env
+
 
 def main() -> None:
-    host = os.environ["TCP_REMOTE_HOST"]
-    port = int(os.environ["TCP_REMOTE_PORT"])
-    msg = os.environ["TCP_MESSAGE"]
-    timeout = float(os.environ.get("TCP_TIMEOUT_SEC", "5"))
-    label = os.environ.get("TCP_CLIENT_LABEL", "client")
+    host, port, msg, timeout, label = parse_client_env(os.environ)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)

@@ -30,7 +30,7 @@ Use the unit testing framework appropriate for the language.
 
 Lifecycle (see `maskfile.md`):
 
-- **`mask test`** — nix-unit (`test.nix`)
+- **`mask test`** — nix-unit (`test.nix` → `test/suite.nix`) and pytest (`examples/lib/test_tcp_support.py`)
 - **`mask lint`** — `nix flake check` (formatting + Dhall type/`freeze` checks)
 - **`mask format`** — `nix fmt` (treefmt)
 

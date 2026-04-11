@@ -42,7 +42,7 @@ Import this flake and use **`inputs.<name>.lib.configurableApp`** (or follow `ni
 - **`checks`** — treefmt formatting check; Dhall type inference (`dhall type`), `dhall freeze --check`, and a negative test on invalid Dhall (see `lib/dhall-ci.nix`, `lib/dhall-ci-entries.nix`).
 - **`formatter`** — used by `nix fmt` / `mask format`.
 
-Unit tests for the library and resolved example configs live in **`test.nix`** (run with **`mask test`**).
+Unit tests: Nix code in **`test/suite.nix`** (via **`test.nix`** for `nix-unit`), Python helpers for the TCP demos in **`examples/lib/test_tcp_support.py`** (pytest). Run **`mask test`** for both.
 
 ## Examples
 
@@ -61,7 +61,7 @@ To build a package without running the full demo: `nix build .#<name>` (see `fla
 | `mask run` | Run the alpha TCP demo (build server + client, one client message). |
 | `mask format` | Apply treefmt (`nix fmt`). |
 | `mask lint` | `nix flake check` (formatting gate + Dhall CI checks). |
-| `mask test` | `nix-unit` on `test.nix`. |
+| `mask test` | `nix-unit` on `test.nix` (suite in `test/suite.nix`) and pytest on `examples/lib/test_tcp_support.py`. |
 
 ## Getting Started
 
@@ -112,7 +112,9 @@ or `mask format`.
 │   ├── dhall-ci.nix          # Dhall checks for `nix flake check`
 │   └── dhall-ci-entries.nix  # Config dirs/entries for `dhall type` and freeze --check
 ├── examples/                 # Demo apps and Dhall configs
-├── test.nix                  # nix-unit tests
+├── test/
+│   └── suite.nix             # nix-unit suite (`pkgs` + `ca` injected)
+├── test.nix                  # nix-unit CLI entry (pins nixpkgs via flake)
 ├── treefmt.nix               # Formatter configuration
 ├── maskfile.md               # mask tasks (run, format, lint, test)
 ├── shell.nix                 # devShell

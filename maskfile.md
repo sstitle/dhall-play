@@ -8,12 +8,14 @@ Lifecycle tasks for [`mask`](https://github.com/jacobdeichert/mask). Run `mask -
 
 ```bash
 set -euo pipefail
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
 server_bin="$(nix build .#alpha-server --no-link --print-out-paths)/bin/alpha-server"
 client_bin="$(nix build .#alpha-client --no-link --print-out-paths)/bin/alpha-client"
 "$server_bin" &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true' EXIT
-sleep 0.5
+python3 "$repo_root/examples/lib/tcp_wait.py" 127.0.0.1 4100
 "$client_bin"
 ```
 
@@ -35,8 +37,13 @@ nix flake check
 
 ## test
 
-> Run [nix-unit](https://github.com/nix-community/nix-unit) tests against `test.nix`
+> Run [nix-unit](https://github.com/nix-community/nix-unit) on `test.nix` (delegates to `test/suite.nix`) and [pytest](https://pytest.org/) on `examples/lib/test_tcp_support.py`
 
 ```bash
+set -euo pipefail
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+export PYTHONPATH="$repo_root/examples/lib"
 nix-unit ./test.nix
+pytest "$repo_root/examples/lib/test_tcp_support.py"
 ```

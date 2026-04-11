@@ -1,5 +1,9 @@
 # Dhall config directory + entry file → JSON in the store → Nix attrsets / derivations.
 #
+# Public-ish exports: `configId` is a stable sha256-based label for store paths (treat as an
+# implementation detail for semver). `dhallConfigJsonPath` is an alias of `dhallConfigJson` for
+# older call sites; prefer `dhallConfigJson`.
+#
 # Nesting configuration (multiple levels):
 # - Prefer composing inside Dhall (imports, record merge, shared schemas) and one `entry` per
 #   logical tree, so relative imports and typing stay coherent.
@@ -13,10 +17,8 @@
 #   env vars in the wrapper. For encrypted secrets at deploy time, pair Nix overrides with
 #   tools such as sops-nix or agenix instead of putting material in Dhall.
 let
-  # Stable, unique store path name per (configDir, entry) pair.
-  configId =
-    { configDir, entry }:
-    builtins.substring 0 12 (builtins.hashString "sha256" (toString configDir + "\0" + entry));
+  # Stable, unique store path name per (configDir, entry) pair (full sha256 hex digest).
+  configId = { configDir, entry }: builtins.hashString "sha256" (toString configDir + "\0" + entry);
 
   dhallConfigJson =
     {

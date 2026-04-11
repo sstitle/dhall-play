@@ -6,11 +6,11 @@ import os
 import socket
 import sys
 
+from tcp_support import parse_server_env
+
 
 def main() -> None:
-    host = os.environ["TCP_LISTEN_HOST"]
-    port = int(os.environ["TCP_LISTEN_PORT"])
-    svc = os.environ.get("TCP_SERVICE_NAME", "server")
+    host, port, svc = parse_server_env(os.environ)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

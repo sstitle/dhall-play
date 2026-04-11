@@ -2,8 +2,7 @@
 let
   inherit (ca) mkConfigurableShellApp;
   configDir = ./config;
-  tcpServer = ./../lib/tcp_server.py;
-  tcpClient = ./../lib/tcp_client.py;
+  tcpLib = ./../lib;
 in
 {
   beta-server = mkConfigurableShellApp {
@@ -16,7 +15,7 @@ in
       export TCP_LISTEN_HOST=${pkgs.lib.escapeShellArg config.listenHost}
       export TCP_LISTEN_PORT=${toString config.listenPort}
       export TCP_SERVICE_NAME=${pkgs.lib.escapeShellArg config.serviceName}
-      exec ${pkgs.python3}/bin/python3 ${tcpServer}
+      exec ${pkgs.python3}/bin/python3 ${tcpLib}/tcp_server.py
     '';
   };
 
@@ -32,7 +31,7 @@ in
       export TCP_MESSAGE=${pkgs.lib.escapeShellArg config.message}
       export TCP_TIMEOUT_SEC=${toString config.connectTimeoutSec}
       export TCP_CLIENT_LABEL=${pkgs.lib.escapeShellArg config.clientLabel}
-      exec ${pkgs.python3}/bin/python3 ${tcpClient}
+      exec ${pkgs.python3}/bin/python3 ${tcpLib}/tcp_client.py
     '';
   };
 }
