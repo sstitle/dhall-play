@@ -1,47 +1,10 @@
 # Maskfile
 
-This is a [mask](https://github.com/jacobdeichert/mask) task runner file.
-
-## hello
-
-> This is an example command you can run with `mask hello`
-
-```bash
-echo "Hello World!"
-```
+Lifecycle tasks for [`mask`](https://github.com/jacobdeichert/mask). Run `mask --help` for a list of commands.
 
 ## run
 
-> Show the resolved production config as a Nix expression
-
-```bash
-cd examples/alpha/config && dhall-to-nix <<< "./server.dhall"
-```
-
-## build
-
-> Build and run the app with config baked in from Dhall
-
-```bash
-nix build .#alpha-server && ./result/bin/alpha-server
-nix build .#alpha-client && ./result/bin/alpha-client
-nix build .#beta-server && ./result/bin/beta-server
-nix build .#beta-client && ./result/bin/beta-client
-nix build .#nu-configured-demo && ./result/bin/nu-configured-demo
-nix build .#go-greet && ./result/bin/go-greet
-```
-
-## test
-
-> Run nix-unit tests
-
-```bash
-nix-unit ./test.nix
-```
-
-## alpha-tcp-demo
-
-> Build alpha server and client, run server in the background, send one TCP message from the client (localhost:4100)
+> Build the alpha TCP demo (server + client from Dhall-backed config), start the server, send one message from the client (localhost:4100)
 
 ```bash
 set -euo pipefail
@@ -54,17 +17,26 @@ sleep 0.5
 "$client_bin"
 ```
 
-## beta-tcp-demo
+## format
 
-> Same for the beta pair (localhost:4200, different Dhall-injected message)
+> Format the tree using the flake formatter ([treefmt](https://github.com/numtide/treefmt) via `treefmt.nix`: nixfmt, mdformat, keep-sorted, …)
 
 ```bash
-set -euo pipefail
-server_bin="$(nix build .#beta-server --no-link --print-out-paths)/bin/beta-server"
-client_bin="$(nix build .#beta-client --no-link --print-out-paths)/bin/beta-client"
-"$server_bin" &
-pid=$!
-trap 'kill "$pid" 2>/dev/null || true' EXIT
-sleep 0.5
-"$client_bin"
+nix fmt
+```
+
+## lint
+
+> Run `nix flake check`: formatting check, Dhall type inference (`dhall type`) and `dhall freeze --check` on configured entries, and rejection of invalid Dhall syntax in the fixture
+
+```bash
+nix flake check
+```
+
+## test
+
+> Run [nix-unit](https://github.com/nix-community/nix-unit) tests against `test.nix`
+
+```bash
+nix-unit ./test.nix
 ```

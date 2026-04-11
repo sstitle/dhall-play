@@ -28,6 +28,12 @@ Use the unit testing framework appropriate for the language.
   `test` (e.g. `testMyFunction`). See https://github.com/nix-community/nix-unit
 - **Python** - `pytest`
 
+Lifecycle (see `maskfile.md`):
+
+- **`mask test`** — nix-unit (`test.nix`)
+- **`mask lint`** — `nix flake check` (formatting + Dhall type/`freeze` checks)
+- **`mask format`** — `nix fmt` (treefmt)
+
 Run tests with:
 
 ```

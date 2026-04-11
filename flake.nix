@@ -39,6 +39,12 @@
         let
           treefmtEval = inputs.treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
           configurableApp = self.lib.configurableApp;
+          dhallCiEntries = import ./lib/dhall-ci-entries.nix;
+          dhallCi = import ./lib/dhall-ci.nix {
+            inherit pkgs;
+            lib = pkgs.lib;
+            entries = dhallCiEntries;
+          };
           alpha = import ./examples/alpha/packages.nix {
             inherit pkgs;
             ca = configurableApp;
@@ -73,6 +79,11 @@
           # for `nix flake check`
           checks = {
             formatting = treefmtEval.config.build.check self;
+            inherit (dhallCi)
+              dhallTypecheck
+              dhallFreezeCheck
+              dhallInvalidSyntaxRejected
+              ;
           };
         };
     };

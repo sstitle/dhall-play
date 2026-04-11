@@ -13,10 +13,7 @@ pkgs.mkShell {
 
   shellHook = ''
     echo "🚀 Development environment loaded!"
-    echo "Available tools:"
-    echo "  - mask: Task runner"
-    echo ""
-    echo "Run 'mask --help' to see available tasks."
-    echo "Run 'nix fmt' to format all files."
+    echo "Lifecycle: mask run | mask format | mask lint | mask test"
+    echo "Run 'mask --help' for details."
   '';
 }

@@ -1,5 +1,6 @@
 let
-  pkgs = import <nixpkgs> { };
+  flake = builtins.getFlake (toString ./.);
+  pkgs = import flake.inputs.nixpkgs { };
   ca = import ./lib/configurable-app.nix;
 in
 {
@@ -113,6 +114,116 @@ in
           inherit pkgs;
           configDir = ./examples/alpha/config;
           entry = "./client.dhall";
+        }
+      )
+    );
+    expected = true;
+  };
+
+  testDhallConfigFromAttrs = {
+    expr = ca.dhallConfigFromAttrs {
+      greeting = "x";
+      name = "y";
+      style = "z";
+    };
+    expected = {
+      greeting = "x";
+      name = "y";
+      style = "z";
+    };
+  };
+
+  testDhallConfigWithOverrides = {
+    expr = ca.dhallConfigWithOverrides {
+      lib = pkgs.lib;
+      inherit pkgs;
+      configDir = ./examples/go-demo/config;
+      entry = "./app.dhall";
+      overrides = {
+        name = "Patched";
+      };
+    };
+    expected = {
+      greeting = "Configured in Dhall";
+      name = "Patched";
+      style = "embedded-json";
+    };
+  };
+
+  testDhallConfigEntries = {
+    expr =
+      (ca.dhallConfigEntries {
+        inherit pkgs;
+        configDir = ./examples/go-demo/config;
+        entries = {
+          foo = "./app.dhall";
+        };
+      }).foo;
+    expected = ca.dhallConfig {
+      inherit pkgs;
+      configDir = ./examples/go-demo/config;
+      entry = "./app.dhall";
+    };
+  };
+
+  testMergeNixConfigsStrictOk = {
+    expr = ca.mergeNixConfigsStrict {
+      lib = pkgs.lib;
+      configs = [
+        {
+          a = {
+            b = 1;
+          };
+        }
+        {
+          a = {
+            c = 2;
+          };
+        }
+      ];
+    };
+    expected = {
+      a = {
+        b = 1;
+        c = 2;
+      };
+    };
+  };
+
+  testMergeNixConfigsStrictSameValue = {
+    expr = ca.mergeNixConfigsStrict {
+      lib = pkgs.lib;
+      configs = [
+        { a = 1; }
+        { a = 1; }
+      ];
+    };
+    expected = {
+      a = 1;
+    };
+  };
+
+  testMergeNixConfigsStrictConflict = {
+    expr =
+      (builtins.tryEval (
+        builtins.deepSeq (ca.mergeNixConfigsStrict {
+          lib = pkgs.lib;
+          configs = [
+            { a = 1; }
+            { a = 2; }
+          ];
+        }) null
+      )).success;
+    expected = false;
+  };
+
+  testDhallConfigYamlContainsKeys = {
+    expr = pkgs.lib.hasInfix "Configured" (
+      builtins.readFile (
+        ca.dhallConfigYaml {
+          inherit pkgs;
+          configDir = ./examples/go-demo/config;
+          entry = "./app.dhall";
         }
       )
     );

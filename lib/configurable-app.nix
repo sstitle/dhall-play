@@ -9,7 +9,9 @@
 #   files that import a common base, or one entry that imports `../env/prod.dhall`; avoid
 #   duplicating merge rules in both Dhall and Nix unless you need that flexibility.
 # - Secrets and last‑mile overrides rarely belong in committed Dhall; inject via Nix (e.g.
-#   `recursiveUpdate (dhallConfig …) { token = … }`) or runtime env vars in the wrapper.
+#   `dhallConfigWithOverrides` or `recursiveUpdate (dhallConfig …) { token = … }`) or runtime
+#   env vars in the wrapper. For encrypted secrets at deploy time, pair Nix overrides with
+#   tools such as sops-nix or agenix instead of putting material in Dhall.
 let
   # Stable, unique store path name per (configDir, entry) pair.
   configId =
@@ -30,16 +32,137 @@ let
         nativeBuildInputs = [ pkgs.dhall-json ];
       }
       ''
+        set -euo pipefail
         cp -r ${configDir}/. .
-        dhall-to-json <<< ${pkgs.lib.escapeShellArg entry} > $out
+        if ! dhall-to-json <<< ${pkgs.lib.escapeShellArg entry} > "$out" 2>dhall.stderr; then
+          echo "dhall-to-json failed:" >&2
+          cat dhall.stderr >&2
+          exit 1
+        fi
       '';
 
   # Same derivation as `dhallConfigJson`; kept for older call sites.
   dhallConfigJsonPath = dhallConfigJson;
 
+  # YAML on disk for runtimes that read YAML (not parsed back into Nix here).
+  dhallConfigYaml =
+    {
+      pkgs,
+      configDir,
+      entry,
+    }:
+    let
+      id = configId { inherit configDir entry; };
+    in
+    pkgs.runCommand "dhall-config-${id}.yaml"
+      {
+        nativeBuildInputs = [ pkgs.dhall-yaml ];
+      }
+      ''
+        set -euo pipefail
+        cp -r ${configDir}/. .
+        if ! ${pkgs.lib.getExe' pkgs.dhall-yaml "dhall-to-yaml-ng"} <<< ${pkgs.lib.escapeShellArg entry} > "$out" 2>dhall.stderr; then
+          echo "dhall-to-yaml-ng failed:" >&2
+          cat dhall.stderr >&2
+          exit 1
+        fi
+      '';
+
   dhallConfig = args: builtins.fromJSON (builtins.readFile (dhallConfigJson args));
 
+  # Identity helper for tests or callers that already have an attrset shaped like `dhallConfig`.
+  dhallConfigFromAttrs = attrs: attrs;
+
+  dhallConfigWithOverrides =
+    {
+      lib,
+      pkgs,
+      configDir,
+      entry,
+      overrides,
+    }:
+    lib.recursiveUpdate (dhallConfig { inherit pkgs configDir entry; }) overrides;
+
+  # Directory whose `$out/<name>` is the resolved JSON (e.g. `cp "$out/config.json" …`).
+  dhallConfigJsonNamed =
+    {
+      pkgs,
+      configDir,
+      entry,
+      name ? "config.json",
+    }:
+    let
+      json = dhallConfigJson { inherit pkgs configDir entry; };
+      id = configId { inherit configDir entry; };
+    in
+    pkgs.runCommand "dhall-config-named-${id}" { } ''
+      mkdir -p "$out"
+      cp ${json} "$out/${name}"
+    '';
+
   mergeNixConfigs = { lib, configs }: lib.foldl' lib.recursiveUpdate { } configs;
+
+  mergeNixConfigsStrict =
+    { lib, configs }:
+    let
+      mergePair =
+        path: a: b:
+        let
+          keys = lib.unique (lib.attrNames a ++ lib.attrNames b);
+          mergeKey =
+            k:
+            let
+              hasA = a ? ${k};
+              hasB = b ? ${k};
+              here = path ++ [ k ];
+              hereStr = lib.concatStringsSep "." here;
+            in
+            if hasA && hasB then
+              let
+                av = a.${k};
+                bv = b.${k};
+              in
+              if lib.isAttrs av && lib.isAttrs bv then
+                mergePair here av bv
+              else if av == bv then
+                av
+              else
+                throw "configurableApp.mergeNixConfigsStrict: conflicting values at ${hereStr}: ${lib.generators.toPretty { } av} vs ${lib.generators.toPretty { } bv}"
+            else if hasA then
+              a.${k}
+            else
+              b.${k};
+        in
+        lib.genAttrs keys mergeKey;
+    in
+    lib.foldl' (acc: x: mergePair [ ] acc x) { } configs;
+
+  # { entries = { alpha-server = "./server.dhall"; }; } → { alpha-server = <attrset>; … }
+  dhallConfigEntries =
+    {
+      pkgs,
+      configDir,
+      entries,
+    }:
+    builtins.mapAttrs (name: entry: dhallConfig { inherit pkgs configDir entry; }) entries;
+
+  mkConfigurableProcess =
+    {
+      pkgs,
+      name,
+      configDir,
+      entry,
+      config ? null,
+      runtimeInputs ? [ ],
+      text,
+    }:
+    let
+      resolved = if config != null then config else dhallConfig { inherit pkgs configDir entry; };
+    in
+    pkgs.writeShellApplication {
+      inherit name runtimeInputs;
+      text = text resolved;
+    };
 
   mkConfigurableShellApp =
     {
@@ -47,15 +170,20 @@ let
       name,
       configDir,
       entry,
+      config ? null,
       text,
       runtimeInputs ? [ ],
     }:
-    let
-      config = dhallConfig { inherit pkgs configDir entry; };
-    in
-    pkgs.writeShellApplication {
-      inherit name runtimeInputs;
-      text = text config;
+    mkConfigurableProcess {
+      inherit
+        pkgs
+        name
+        configDir
+        entry
+        config
+        runtimeInputs
+        text
+        ;
     };
 
   # Copy a *.nu file into the store, resolve Dhall `entry`, then run `nu` with `setEnv` exports.
@@ -65,12 +193,13 @@ let
       name,
       configDir,
       entry,
+      config ? null,
       nuScript,
       setEnv,
       runtimeInputs ? [ ],
     }:
     let
-      config = dhallConfig { inherit pkgs configDir entry; };
+      resolved = if config != null then config else dhallConfig { inherit pkgs configDir entry; };
       nuName = baseNameOf (toString nuScript);
       nuScriptDir = pkgs.runCommand "${name}-nu-${configId { inherit configDir entry; }}" { } ''
         mkdir -p $out
@@ -82,7 +211,7 @@ let
       runtimeInputs = [ pkgs.nushell ] ++ runtimeInputs;
       text = ''
         set -euo pipefail
-        ${setEnv config}
+        ${setEnv resolved}
         exec ${pkgs.lib.getExe pkgs.nushell} ${nuScriptDir}/${nuName}
       '';
     };
@@ -92,8 +221,15 @@ in
     configId
     dhallConfigJson
     dhallConfigJsonPath
+    dhallConfigYaml
     dhallConfig
+    dhallConfigFromAttrs
+    dhallConfigWithOverrides
+    dhallConfigJsonNamed
     mergeNixConfigs
+    mergeNixConfigsStrict
+    dhallConfigEntries
+    mkConfigurableProcess
     mkConfigurableShellApp
     mkConfigurableNuApp
     ;

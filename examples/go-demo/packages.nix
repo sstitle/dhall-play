@@ -1,10 +1,11 @@
 { pkgs, ca }:
 let
-  inherit (ca) dhallConfigJson;
+  inherit (ca) dhallConfigJsonNamed;
   configDir = ./config;
-  configJson = dhallConfigJson {
+  configDirOut = dhallConfigJsonNamed {
     inherit pkgs configDir;
     entry = "./app.dhall";
+    name = "config.json";
   };
 in
 {
@@ -14,7 +15,7 @@ in
     src = ./go-greet;
     vendorHash = null;
     postPatch = ''
-      cp ${configJson} config.json
+      cp ${configDirOut}/config.json config.json
     '';
   };
 }
